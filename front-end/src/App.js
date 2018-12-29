@@ -3,9 +3,12 @@ import './App.css';
 import 'tachyons';
 import SongQueue from './components/SongQueue/SongQueue';
 
+const serverUrl = 'localhost';
+const port = '8000';
+
 class App extends Component {
-	constructor() {
-		super()
+	constructor(props) {
+		super(props);
 		this.state = {
 			songUrl: '',
 			searchResults: [{}]
@@ -13,34 +16,47 @@ class App extends Component {
 	}
 
 	async performSearch() {
-		let data = await fetch('http://192.168.2.14:1100')
-			.then(res => res.json())
+		let data = await fetch(`http://${serverUrl}:${port}/search?query=${this.state.songUrl}`)
+			.then(res => res.json());
 		this.setState({
+			songUrl: '',
 			searchResults: data
-		})
-	}
-
-	onSkipPressed = () => {
-		fetch("http://192.168.2.14:8000/skip")
-	}
-
-	onPlayPressed = () => {
-		fetch(`http://192.168.2.14:8000/play?url=${this.state.songUrl}`, {
-			method: 'post'
-		})
+		});
 
 		document.getElementById('search-box').value = '';
 	}
 
+	onSkipPressed = () => {
+		fetch(`http://${serverUrl}:${port}/skip`);
+	};
+
+	onPlayPressed = () => {
+		fetch(`http://${serverUrl}:${port}/play?url=${this.state.songUrl}`, {
+			method: 'post'
+		});
+		this.setState({
+			songUrl: ''
+		});
+
+		document.getElementById('search-box').value = '';
+	};
+
 	onStopPressed = () => {
 		console.log('Stop pressed')
-	}
+	};
 
 	onUrlChanged = (event) => {
 		this.setState({
 			songUrl: event.target.value
 		})
-	}
+	};
+
+	onSongClicked = (obj) => {
+		this.setState({
+			songUrl: obj.url,
+			searchResults: [{}]
+		}, () => this.onPlayPressed())
+	};
 
 	render() {
 		return (
@@ -52,12 +68,20 @@ class App extends Component {
 					</div>
 					<div className="mt2 pl2 pr2">
 						<button id="skip" onClick={this.onSkipPressed} className="mr3 ml3"> skip </button>
-						<button id="play" onClick={this.onPlayPressed} className="mr3 ml3"> play </button>
-						<button id="stop" onClick={this.onStopPressed} className="mr3 ml3"> stop </button>
+						<button id="add" onClick={this.onPlayPressed} className="mr3 ml3"> + </button>
+						<button id="pause" onClick={this.onStopPressed} className="mr3 ml3"> pause </button>
 					</div>
 				</div>
-				<div>
-					<SongQueue searchResults={this.state.searchResults} />
+				<div className='mt3'>
+					{
+						this.state.searchResults.length === 1 ?
+							null : (
+								<SongQueue
+									searchResults={this.state.searchResults}
+									className='flex'
+									onSongClicked={this.onSongClicked} />
+							)
+					}
 				</div>
 			</div>
 		);

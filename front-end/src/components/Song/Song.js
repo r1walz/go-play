@@ -1,9 +1,12 @@
 import React from 'react';
+import './Song.css'
 
-const Song = ({name, email}) => {
+const Song = ({ title, url, thumb, onSongClicked }) => {
     return (
-        <div className='tc dib br3 pa3 ma2 grow bw2 shadow-5'><label>{name}</label><br/>
-        <label>{email}</label>
+        <div className='tc dib br3 pa3 ma2 grow bw2 shadow-5'
+            onClick={() => onSongClicked({ url })}>
+            <img src={thumb} alt={title} className='dimension' /><br />
+            <label className='label'>{title}</label><br />
         </div>
     )
 }

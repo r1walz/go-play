@@ -1,14 +1,15 @@
 package main
 
 import (
+	"google.golang.org/api/youtube/v3"
 	"log"
-	"net/http"
 )
 
 // Res struct for response
 type Res struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	Thumbnail string `json:"thumb"`
 }
 
 func (s Service) getIDs(q string) []Res {
@@ -22,29 +23,24 @@ func (s Service) getIDs(q string) []Res {
 		return nil
 	}
 
-	videos := make(map[string]string)
+	videos := make(map[string]*youtube.SearchResultSnippet)
 
 	for _, item := range response.Items {
 		if item.Id.Kind == "youtube#video" {
-			videos[item.Id.VideoId] = item.Snippet.Title
+			videos[item.Id.VideoId] = item.Snippet
 		}
 	}
 
 	return parseIDs(videos)
 }
 
-func parseIDs(matches map[string]string) []Res {
+func parseIDs(matches map[string]*youtube.SearchResultSnippet) []Res {
 	var res []Res
-	for id := range matches {
-		res = append(res, Res{ID: id, URL: getURL(id)})
+	for id, snippet := range matches {
+		res = append(res, Res{Title: snippet.Title,
+			URL: "https://www.youtube.com/watch?v=" + id,
+			Thumbnail: snippet.Thumbnails.High.Url},
+			)
 	}
 	return res
-}
-
-func getURL(id string) string {
-	return "https://www.youtube.com/watch?v=" + id
-}
-
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
